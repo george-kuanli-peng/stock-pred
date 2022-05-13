@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras import Input, Model
+from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.models import load_model as tf_load_model
 
@@ -46,11 +47,17 @@ def build_LSTM(x_train, units):
     return model
 
 
-def train_model(model, x_train, y_train, epochs, batch, interactive_progress=True):
+def train_model(model, x_train, y_train, epochs, batch,
+                interactive_progress=True, tensorboard_path=None):
+    callbacks = []
+    if tensorboard_path:
+        cb = TensorBoard(log_dir=tensorboard_path, histogram_freq=1)
+        callbacks.append(cb)
     history = model.fit(x_train, y_train,
                         epochs=epochs, batch_size=batch,
                         verbose=1 if interactive_progress else 2,
-                        validation_split=.1, shuffle=True)
+                        validation_split=.1, shuffle=True,
+                        callbacks=callbacks)
     return history
 
 
