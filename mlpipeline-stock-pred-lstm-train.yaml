@@ -1,0 +1,84 @@
+- type: git-pull
+  name: get latest code
+  git_url: https://github.com/george-kuanli-peng/stock-pred.git
+  branch: main
+  username: george-kuanli-peng
+  password: {{ GITHUB_TOKEN }}
+
+- type: docker-run
+  name: setup-global-settings
+  container: myelintek/demo-server:v1.0
+  flavor: small
+  command: |
+      cat <<END_OF_SCRIPT > run_train.py
+      # Global settings
+      WINDOW = 50
+      EPOCHS = 15
+      BATCH = 20
+      TEST_RATIO = .2
+      
+      DATA_PATH = '/mlsteam/data/stock_prices/20220512_tesla.pkl'
+      SCALER_PATH = 'trained/scaler.pkl'
+      MODEL_PATH = 'trained/model'
+      END_OF_SCRIPT
+      
+      echo "Global settings:"
+      cat run_train.py
+
+- type: docker-run
+  name: setup-global-settings
+  container: myelintek/demo-server:v1.0
+  flavor: small
+  commane: |
+      cat <<END_OF_SCRIPT >> run_train.py
+      # Forces to use CPU rather than GPU
+      # NVIDIA drivers of higher versions have messy implimentation of LSTM!
+      # Ref: https://github.com/mozilla/DeepSpeech/issues/3088#issuecomment-656056969
+      # Ref: https://github.com/tensorflow/tensorflow/issues/35950#issuecomment-577427083
+      import os
+      os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+      
+      from train import (load_data, transform_data, extract_x_y)
+      
+      stock_dates, stock_prices = load_data(DATA_PATH)
+      scaler, scaled_data = transform_data(stock_prices)
+      
+      train_split = int(len(scaled_data) * (1.0 - TEST_RATIO))
+      scaled_data_train = scaled_data[:train_split]
+      x_train, y_train = extract_x_y(scaled_data_train, window=WINDOW, offset=WINDOW)
+      
+      from train import (build_LSTM, train_model)
+      
+      model = build_LSTM(x_train, units=WINDOW)
+      train_model(model, x_train, y_train, EPOCHS, BATCH, interactive_progress=False)
+      
+      from train import (predict, get_rmse, get_mape)
+      
+      x_test, _ = extract_x_y(scaled_data, window=WINDOW, offset=train_split)
+      y_lstm_scaled = model.predict(x_test)
+      y_lstm = scaler.inverse_transform(y_lstm_scaled)
+      y_actual = stock_prices[train_split:]
+      
+      rmse_lstm = get_rmse(pred=y_lstm, actual=y_actual)
+      mape_lstm = get_mape(pred=y_lstm, actual=y_actual)
+      print(f'RMSE: {rmse_lstm}, MAPE: {mape_lstm}')
+      
+      from train import (save_scaler, save_model)
+      
+      save_scaler(scaler, SCALER_PATH)
+      save_model(model, MODEL_PATH)
+      END_OF_SCRIPT
+
+- type: docker-run
+  name: setup-global-settings
+  container: myelintek/demo-server:v1.0
+  flavor: small
+  command: |
+      # fix some pkage requirements, since some are not available in Python3.6
+      sed 's/matplotlib.*/matplotlib/' requirements.txt > requirements_fix.txt
+      sed -i 's/scikit-learn.*/scikit-learn/' requirements_fix.txt
+      sed -i 's/tensorflow.*/tensorflow/' requirements_fix.txt
+      
+      pip install -U -r requirements_fix.txt
+      
+      python run_train.py
