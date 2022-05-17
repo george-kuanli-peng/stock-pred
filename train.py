@@ -9,6 +9,17 @@ from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.models import load_model as tf_load_model
 
 
+_track = None
+
+
+def get_mlsteam_track():
+    global _track
+    if _track is None:
+        import mlsteam
+        _track = mlsteam.init()
+    return _track
+
+
 def load_data(pkl_file_path):
     with open(pkl_file_path, 'rb') as fin:
         data = pickle.load(fin)
@@ -48,7 +59,15 @@ def build_LSTM(x_train, units):
 
 
 def train_model(model, x_train, y_train, epochs, batch,
-                interactive_progress=True, tensorboard_path=None):
+                interactive_progress=True, tensorboard_path=None,
+                mlsteam_track=False):
+    if mlsteam_track:
+        track = get_mlsteam_track()
+        track['epochs'] = epochs
+        track['batch'] = batch
+        track['x_train'] = x_train
+        track['y_train'] = y_train
+
     callbacks = []
     if tensorboard_path:
         cb = TensorBoard(log_dir=tensorboard_path, histogram_freq=1)
