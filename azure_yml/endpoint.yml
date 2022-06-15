@@ -1,0 +1,4 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+name: george-mlops-endpoint
+auth_mode: key
+

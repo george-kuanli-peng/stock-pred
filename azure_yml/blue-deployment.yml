@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+name: blue
+endpoint_name: george-mlops-endpoint
+model: azureml:stock-pred-lstm:2
+code_configuration:
+  code: ../
+  scoring_script: score_azure.py
+environment:
+  #name: myenv
+  conda_file: ../env_azure.yml
+  #image: mcr.microsoft.com/azureml/tensorflow-2.4-ubuntu18.04-py37-cpu-inference:latest
+  image: mcr.microsoft.com/azureml/openmpi3.1.2-ubuntu18.04:latest
+  #build:
+  #  path: ../
+  #  dockerfile_path: azure_yml/Dockerfile
+instance_type: Standard_D2as_v4
+instance_count: 1
