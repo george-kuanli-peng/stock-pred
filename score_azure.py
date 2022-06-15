@@ -2,14 +2,15 @@ import json
 import logging
 import os
 
-import numpy
+import numpy as np
 
-from train import load_data, load_model, load_scaler, extract_x_y
+from train import load_model, load_scaler, extract_x_y
 
 
 model = None
 scaler = None
 WINDOW = 50
+
 
 def init():
     """
@@ -33,14 +34,14 @@ def run(raw_data):
     This function is called for every invocation of the endpoint to perform the actual scoring/prediction.
     """
     logging.info("model: request received")
-    data = json.loads(raw_data)["data"]
+    data = np.array(json.loads(raw_data)["data"])
     if len(data) < 50:
         logging.warn(f'Insufficient stock prices (currently {len(data)}) given. '
                      f'Please provide at least {WINDOW} records.')
         raise ValueError('insufficient stock precies given')
     
     scaled_data = scaler.transform(data[:,None])
-    x_scaled, y_scaled = train.extract_x_y(scaled_data + np.array([.0]), window=WINDOW, offset=WINDOW)
+    x_scaled, y_scaled = extract_x_y(scaled_data + np.array([.0]), window=WINDOW, offset=WINDOW)
     y_pred_scaled = model.predict(x_scaled)
     y_pred = scaler.inverse_transform(y_pred_scaled)
     logging.info("Request processed")

@@ -269,3 +269,10 @@ tags
 *.code-workspace
 
 # End of https://www.toptal.com/developers/gitignore/api/python,vim,visualstudiocode,jupyternotebooks,linux,macos
+
+# Azure Machine Learning Studio
+.amlignore
+.ipynb_aml_checkpoints/ 
+*.amltmp 
+*.amltemp
+
