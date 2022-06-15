@@ -8,5 +8,5 @@ code_configuration:
 environment:
   conda_file: ../env_azure.yml
   image: mcr.microsoft.com/azureml/openmpi3.1.2-ubuntu18.04:latest
-instance_type: Standard_D2as_v4
+instance_type: Standard_DS2_v2
 instance_count: 1
