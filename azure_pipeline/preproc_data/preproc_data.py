@@ -2,6 +2,7 @@ import argparse
 import glob
 import os
 
+import mlflow
 import numpy as np
 
 from train import extract_x_y, load_data, save_scaler, transform_data
@@ -27,6 +28,9 @@ def get_args():
 def main():
     args = get_args()
 
+    # Start Logging
+    mlflow.start_run()
+
     # read data
     # FIXME: the current component setting is "uri_folder" unexpectedly!
     data_file = glob.glob(os.path.join(args.data, '*.pkl'))[0]  # get the first matched file
@@ -39,6 +43,9 @@ def main():
     x_train, y_train = extract_x_y(scaled_data_train, window=args.window, offset=args.window)
     x_test, y_test = extract_x_y(scaled_data, window=args.window, offset=train_split)
 
+    mlflow.log_metric('num_samples', scaled_data.shape[0])
+    mlflow.log_metric('test_ratio', args.test_ratio)
+
     # save data
     # FIXME: the current component setting is "uri_folder" unexpectedly!
     save_scaler(scaler, os.path.join(args.scaler, 'scaler.pkl'))
@@ -46,6 +53,9 @@ def main():
     np.save(os.path.join(args.train_data_y, 'y_train.npy'), y_train)
     np.save(os.path.join(args.test_data_x, 'x_test.npy'), x_test)
     np.save(os.path.join(args.test_data_y, 'y_test.npy'), y_test)
+
+    # Stop Logging
+    mlflow.end_run()
 
 if __name__ == '__main__':
     main()

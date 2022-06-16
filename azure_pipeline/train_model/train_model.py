@@ -1,6 +1,7 @@
 import argparse
 import os
 
+import mlflow
 import numpy as np
 
 from train import build_LSTM, get_rmse, get_mape, load_scaler, save_model, train_model
@@ -29,6 +30,9 @@ def get_args():
 def main():
     args = get_args()
 
+    # Start Logging
+    mlflow.start_run()
+
     # load data
     # FIXME: the current component setting is "uri_folder" unexpectedly!
     scaler = load_scaler(os.path.join(args.scaler, 'scaler.pkl'))
@@ -38,6 +42,7 @@ def main():
     y_test = np.load(os.path.join(args.test_data_y, 'y_test.npy'))
 
     # train model
+    mlflow.tensorflow.autolog()
     model = build_LSTM(x_train, units=args.window)
     train_model(
         model, x_train, y_train,
@@ -57,6 +62,9 @@ def main():
 
     # save model
     save_model(model, args.model)
+
+    # Stop Logging
+    mlflow.end_run()
 
 
 if __name__ == '__main__':
