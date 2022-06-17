@@ -58,10 +58,21 @@ def main():
 
     rmse_lstm = get_rmse(pred=y_lstm, actual=y_actual)
     mape_lstm = get_mape(pred=y_lstm, actual=y_actual)
+    mlflow.log_metric('rmse', rmse_lstm)
+    mlflow.log_metric('mape', mape_lstm)
     print(f'RMSE: {rmse_lstm}, MAPE: {mape_lstm}')
 
     # save model
-    save_model(model, args.model)
+    local_model_path = './saved_model'
+    os.makedirs(local_model_path, exist_ok=True)
+    save_model(model, local_model_path)
+    mlflow.tensorflow.log_model(
+        tf_saved_model_dir=local_model_path,
+        tf_meta_graph_tags=None,
+        tf_signature_def_key='serving_default',
+        artifact_path=local_model_path,
+        code_paths=['train.py']
+    )
 
     # Stop Logging
     mlflow.end_run()
