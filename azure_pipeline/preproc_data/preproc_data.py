@@ -1,10 +1,14 @@
 import argparse
-import glob
-import os
 
 import mlflow
 import numpy as np
 
+from azure_pipeline import (
+    get_first_match_data_file,
+    get_scaler_path,
+    get_x_train_path, get_y_train_path,
+    get_x_test_path, get_y_test_path
+)
 from train import extract_x_y, load_data, save_scaler, transform_data
 
 
@@ -33,7 +37,7 @@ def main():
 
     # read data
     # FIXME: the current component setting is "uri_folder" unexpectedly!
-    data_file = glob.glob(os.path.join(args.data, '*.pkl'))[0]  # get the first matched file
+    data_file = get_first_match_data_file(args.data)  # get the first matched file
     stock_dates, stock_prices = load_data(data_file)
     scaler, scaled_data = transform_data(stock_prices)
 
@@ -48,11 +52,11 @@ def main():
 
     # save data
     # FIXME: the current component setting is "uri_folder" unexpectedly!
-    save_scaler(scaler, os.path.join(args.scaler, 'scaler.pkl'))
-    np.save(os.path.join(args.train_data_x, 'x_train.npy'), x_train)
-    np.save(os.path.join(args.train_data_y, 'y_train.npy'), y_train)
-    np.save(os.path.join(args.test_data_x, 'x_test.npy'), x_test)
-    np.save(os.path.join(args.test_data_y, 'y_test.npy'), y_test)
+    save_scaler(scaler, get_scaler_path(args.scaler))
+    np.save(get_x_train_path(args.train_data_x), x_train)
+    np.save(get_y_train_path(args.train_data_y), y_train)
+    np.save(get_x_test_path(args.test_data_x), x_test)
+    np.save(get_y_test_path(args.test_data_y), y_test)
 
     # Stop Logging
     mlflow.end_run()

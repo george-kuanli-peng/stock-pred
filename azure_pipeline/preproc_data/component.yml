@@ -1,0 +1,26 @@
+name: stock_pred_data_prep
+display_name: Preprocess data for training
+description: reads raw price data, normalize and split the data
+# version: 1 # Not specifying a version will automatically update the version
+type: command
+inputs:
+  data: {type: uri_folder}
+  test_ratio: {type: number}
+  window: {type: number}
+outputs:
+  scaler: {type: uri_file}
+  train_data_x: {type: uri_file}
+  train_data_y: {type: uri_file}
+  test_data_x: {type: uri_file}
+  test_data_y: {type: uri_file}
+code: ../..
+environment:
+  azureml:tensorflow_sklean_cpu:1.0
+command: >-
+  PYTHONPATH=$PYTHONPATH:$(pwd) 
+  PYTHONPATH=$PYTHONPATH:$(pwd)  python azure_pipeline/preproc_data/preproc_data.py 
+      --data=${{inputs.data}} --test_ratio=${{inputs.test_ratio}} 
+      --window=${{inputs.window}} 
+      --scaler=${{outputs.scaler}} 
+      --train_data_x=${{outputs.train_data_x}} --train_data_y=${{outputs.train_data_y}} 
+      --test_data_x=${{outputs.test_data_x}} --test_data_y=${{outputs.test_data_y}}

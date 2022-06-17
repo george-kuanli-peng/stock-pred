@@ -4,6 +4,11 @@ import os
 import mlflow
 import numpy as np
 
+from azure_pipeline import (
+    get_scaler_path,
+    get_x_train_path, get_y_train_path,
+    get_x_test_path, get_y_test_path
+)
 from train import build_LSTM, get_rmse, get_mape, load_scaler, save_model, train_model
 
 
@@ -19,10 +24,6 @@ def get_args():
     parser.add_argument("--train_data_y", type=str, help="path to train data y")
     parser.add_argument("--test_data_x", type=str, help="path to test data x")
     parser.add_argument("--test_data_y", type=str, help="path to test data y")
-
-    # output parms
-    parser.add_argument('--model', type=str, help='path to the trained model')
-    parser.add_argument('--tensorboard', type=str, help='path to tensorboard files')
     
     return parser.parse_args()
 
@@ -35,20 +36,22 @@ def main():
 
     # load data
     # FIXME: the current component setting is "uri_folder" unexpectedly!
-    scaler = load_scaler(os.path.join(args.scaler, 'scaler.pkl'))
-    x_train = np.load(os.path.join(args.train_data_x, 'x_train.npy'))
-    y_train = np.load(os.path.join(args.train_data_y, 'y_train.npy'))
-    x_test = np.load(os.path.join(args.test_data_x, 'x_test.npy'))
-    y_test = np.load(os.path.join(args.test_data_y, 'y_test.npy'))
+    scaler = load_scaler(get_scaler_path(args.scaler))
+    x_train = np.load(get_x_train_path(args.train_data_x))
+    y_train = np.load(get_y_train_path(args.train_data_y))
+    x_test = np.load(get_x_test_path(args.test_data_x))
+    y_test = np.load(get_y_test_path(args.test_data_y))
 
     # train model
     mlflow.tensorflow.autolog()
     model = build_LSTM(x_train, units=args.window)
+    local_tensorboard_path = './tensorboard_logs'
+    os.makedirs(local_tensorboard_path, exist_ok=True)
     train_model(
         model, x_train, y_train,
         args.epochs, args.batch,
         interactive_progress=False,
-        tensorboard_path=args.tensorboard
+        tensorboard_path=local_tensorboard_path
     )
 
     # test model

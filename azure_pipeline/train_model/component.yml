@@ -1,0 +1,25 @@
+name: stock_pred_model_train
+display_name: Train model
+description: train model and test model
+# version: 1 # Not specifying a version will automatically update the version
+type: command
+inputs:
+  scaler: {type: uri_file}
+  train_data_x: {type: uri_file}
+  train_data_y: {type: uri_file}
+  test_data_x: {type: uri_file}
+  test_data_y: {type: uri_file}
+  window: {type: number}
+  epochs: {type: number}
+  batch: {type: number}
+outputs: {}
+code: ../..
+environment:
+  azureml:tensorflow_sklean_cpu:1.0
+command: >-
+  PYTHONPATH=$PYTHONPATH:$(pwd) 
+  python azure_pipeline/train_model/train_model.py 
+      --window=${{inputs.window}} --epochs=${{inputs.epochs}} --batch=${{inputs.batch}} 
+      --scaler=${{inputs.scaler}} 
+      --train_data_x=${{inputs.train_data_x}} --train_data_y=${{inputs.train_data_y}} 
+      --test_data_x=${{inputs.test_data_x}} --test_data_y=${{inputs.test_data_y}}
