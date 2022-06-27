@@ -1,5 +1,5 @@
 command: python3 train.py
-runtime_params:
+params:
   window: 50
   epochs: 15
   batch: 20
