@@ -129,7 +129,7 @@ if __name__ == '__main__':
     DATA_PATH = stparams.get_value(
         'data_path', '/mlsteam/data/stock_prices/20220512_tesla.pkl')
     SCALER_PATH = stparams.get_value('scaler_path', '/working/scaler.pkl')
-    MODEL_PATH = stparams.get_value('model_path', '/working/model')
+    MODEL_PATH = stparams.get_value('model_path', '/working/1')
     TENSORBOARD_PATH = stparams.get_value('tensorboard_path', '/tensorboard')
 
     # Forces to use CPU rather than GPU
