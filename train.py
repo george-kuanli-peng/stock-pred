@@ -1,3 +1,4 @@
+import os
 import pickle
 from pathlib import Path
 
@@ -23,18 +24,19 @@ def get_mlsteam_track():
 def load_data(pkl_file_path):
     with open(pkl_file_path, 'rb') as fin:
         data = pickle.load(fin)
-    
-    stock_dates = np.array([h['date'] for h in data['prices']], dtype='datetime64[s]')  # in timestamp
+
+    stock_dates = np.array([h['date'] for h in data['prices']],
+                           dtype='datetime64[s]')  # in timestamp
     stock_dates = np.flipud(stock_dates)
     stock_prices = np.array([h['close'] for h in data['prices']])
     stock_prices = np.flipud(stock_prices)
-    
+
     return stock_dates, stock_prices
 
 
 def transform_data(data):
     scaler = StandardScaler()
-    scaled_data = scaler.fit_transform(data[:,None])
+    scaled_data = scaler.fit_transform(data[:, None])
     return scaler, scaled_data
 
 
@@ -53,7 +55,7 @@ def build_LSTM(x_train, units):
     l_hid = LSTM(units=units)(l_hid)
     l_out = Dense(units=1, activation='linear')(l_hid)
     model = Model(l_in, l_out)
-    
+
     model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
@@ -114,3 +116,36 @@ def get_rmse(pred, actual):
 
 def get_mape(pred, actual):
     return (np.fabs(actual-pred)/actual)[actual != 0].mean()
+
+
+if __name__ == '__main__':
+    from mlsteam import stparams
+    # Global settings
+    WINDOW = int(stparams.get_value('window', 50))
+    EPOCHS = int(stparams.get_value('epochs', 15))
+    BATCH = int(stparams.get_value('batch', 20))
+    TEST_RATIO = float(stparams.get_value('test_ratio', .2))
+
+    DATA_PATH = stparams.get_value(
+        'data_path', '/mlsteam/data/stock_prices/20220512_tesla.pkl')
+    SCALER_PATH = stparams.get_value('scaler_path', '/working/scaler.pkl')
+    MODEL_PATH = stparams.get_value('model_path', '/working/model')
+    TENSORBOARD_PATH = stparams.get_value('tensorboard_path', '/tensorboard')
+
+    # Forces to use CPU rather than GPU
+    # NVIDIA drivers of higher versions have messy implimentation of LSTM!
+    # Ref: https://github.com/mozilla/DeepSpeech/issues/3088#issuecomment-656056969
+    # Ref: https://github.com/tensorflow/tensorflow/issues/35950#issuecomment-577427083
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    stock_dates, stock_prices = load_data(DATA_PATH)
+    scaler, scaled_data = transform_data(stock_prices)
+
+    train_split = int(len(scaled_data) * (1.0 - TEST_RATIO))
+    scaled_data_train = scaled_data[:train_split]
+    x_train, y_train = extract_x_y(
+        scaled_data_train, window=WINDOW, offset=WINDOW)
+    model = build_LSTM(x_train, units=WINDOW)
+    train_model(model, x_train, y_train, EPOCHS, BATCH,
+                interactive_progress=True, tensorboard_path=TENSORBOARD_PATH)
+    save_scaler(scaler, SCALER_PATH)
+    save_model(model, MODEL_PATH)
