@@ -15,7 +15,7 @@ RUN echo "deb [arch=amd64] http://storage.googleapis.com/tensorflow-serving-apt 
   /usr/local/bin/mc config host add ms3 https://s3.myelintek.com readonly_user password && \
   /usr/local/bin/mc mirror --overwrite ms3/stock-pred-model /working/
 
-COPY requirements.txt requirements_web.txt train.py web.py train_lstm.ipynb mlsteam.yml ./
+COPY requirements.txt requirements_web.txt train.py web.py train_lstm.ipynb pred_lstm.ipynb mlsteam.yml ./
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
   pip install -r requirements.txt && \
