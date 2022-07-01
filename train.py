@@ -136,7 +136,7 @@ if __name__ == '__main__':
     # NVIDIA drivers of higher versions have messy implimentation of LSTM!
     # Ref: https://github.com/mozilla/DeepSpeech/issues/3088#issuecomment-656056969
     # Ref: https://github.com/tensorflow/tensorflow/issues/35950#issuecomment-577427083
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     stock_dates, stock_prices = load_data(DATA_PATH)
     scaler, scaled_data = transform_data(stock_prices)
 
