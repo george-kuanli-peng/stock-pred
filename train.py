@@ -1,3 +1,4 @@
+import csv
 import os
 import pickle
 from pathlib import Path
@@ -29,6 +30,22 @@ def load_data(pkl_file_path):
                            dtype='datetime64[s]')  # in timestamp
     stock_dates = np.flipud(stock_dates)
     stock_prices = np.array([h['close'] for h in data['prices']])
+    stock_prices = np.flipud(stock_prices)
+
+    return stock_dates, stock_prices
+
+
+def load_data_csv(csv_file_path):
+    stock_dates, stock_prices = [], []
+    with open(csv_file_path, 'rt', newline='') as csvfile:
+        csv_reader = csv.DictReader(csvfile)
+        for row in csv_reader:
+            stock_dates.append(int(row['timestamp']))
+            stock_prices.append(float(row['close']))
+
+    stock_dates = np.array(stock_dates, dtype='datetime64[s]')
+    stock_dates = np.flipud(stock_dates)
+    stock_prices = np.array(stock_prices)
     stock_prices = np.flipud(stock_prices)
 
     return stock_dates, stock_prices

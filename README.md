@@ -50,3 +50,33 @@ To send a request to the deployed model:
    ```
    "[[669.8614501953125], [669.253173828125], [668.6275024414062], ..., [924.2925415039062]]"
    ```
+
+## GCP Vertex AI
+
+Setup:
+
+1. Install Python dependencies
+   ```bash
+   pip install -r requirements_gcp.txt
+   ```
+1. Get GCP authentication config
+   1. Create a service account and grant its access to the project
+   1. Download the authentication Key file (a JSON file)
+   1. Setup the environment variable for Google Cloud SDK
+      ```bash
+      export GOOGLE_APPLICATION_CREDENTIALS=$AUTH_KEY_FILE_PATH
+      ```
+
+To experiment on model training:
+
+```bash
+cd gcp_vertexai
+PYTHONPATH=.. python train_gcp.py --experiment_name $EXP_NAME --project_id $PROJ_ID --location $GCP_REGION --train_csv=$TRAIN_CSV_FILE_PATH
+```
+
+For example,
+```bash
+cd gcp_vertexai
+PYTHONPATH=.. python train_gcp.py --experiment_name stock-pred-lstm-exp --project_id beautiful-sand-178409 --location asia-southeast1 --train_csv=../data/20220808_tesla.csv
+```
+
