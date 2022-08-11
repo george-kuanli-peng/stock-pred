@@ -152,7 +152,7 @@ def get_args():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+def main():
     from mlsteam import stparams
     # Global settings
     WINDOW = int(stparams.get_value('window', 50))
@@ -186,3 +186,7 @@ if __name__ == '__main__':
                 mlsteam_track=args.mlsteam_track)
     save_scaler(scaler, SCALER_PATH)
     save_model(model, MODEL_PATH)
+
+
+if __name__ == '__main__':
+    main()
