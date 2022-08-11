@@ -162,7 +162,7 @@ def get_args():
                         default=float(stparams.get_value('test_ratio', .2)))
     parser.add_argument('--data_path', type=str,
                         default=stparams.get_value('data_path', '/mlsteam/data/stock_prices/20220512_tesla.pkl'),
-                        help='training data path, could be a CSV file or a Python pickle (must end with .pkl) file')
+                        help='training data path, a CSV file or a Python pickle (must end with .pkl) file')
     parser.add_argument('--scaler_path', type=str,
                         default=stparams.get_value('scaler_path', '/working/scaler.pkl'),
                         help='normalizing scaler saving path, ending with .pkl')
@@ -192,7 +192,11 @@ def main():
     # Ref: https://github.com/mozilla/DeepSpeech/issues/3088#issuecomment-656056969
     # Ref: https://github.com/tensorflow/tensorflow/issues/35950#issuecomment-577427083
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-    stock_dates, stock_prices = load_data(data_path)
+
+    if data_path.endswith('.pkl'):
+        stock_dates, stock_prices = load_data(data_path)
+    else:
+        stock_dates, stock_prices = load_data_csv(data_path)
     scaler, scaled_data = transform_data(stock_prices)
 
     train_split = int(len(scaled_data) * (1.0 - test_ratio))
