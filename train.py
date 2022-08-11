@@ -147,45 +147,64 @@ def get_mape(pred, actual):
 
 
 def get_args():
+    from mlsteam import stparams
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mlsteam_track', action='store_true')
+    parser.add_argument('--window', '-W', type=int,
+                        default=int(stparams.get_value('window', 50)),
+                        help='window size')
+    parser.add_argument('--epoch', '-E', type=int,
+                        default=int(stparams.get_value('epochs', 15)),
+                        help='training epochs')
+    parser.add_argument('--batch', '-B', type=int,
+                        default=int(stparams.get_value('batch', 20)),
+                        help='batch size')
+    parser.add_argument('--test_ratio', type=float,
+                        default=float(stparams.get_value('test_ratio', .2)))
+    parser.add_argument('--data_path', type=str,
+                        default=stparams.get_value('data_path', '/mlsteam/data/stock_prices/20220512_tesla.pkl'),
+                        help='training data path, could be a CSV file or a Python pickle (must end with .pkl) file')
+    parser.add_argument('--scaler_path', type=str,
+                        default=stparams.get_value('scaler_path', '/working/scaler.pkl'),
+                        help='normalizing scaler saving path, ending with .pkl')
+    parser.add_argument('--model_path', type=str,
+                        default=stparams.get_value('model_path', '/working/1'),
+                        help='model saving path, will be a directory')
+    parser.add_argument('--tensorboard_path', type=str,
+                        default=stparams.get_value('tensorboard_path', '/working/tensorboard'),
+                        help='TensorBoard logging directory')
+    parser.add_argument('--mlsteam_track', action='store_true',
+                        help='enable MLSteam tracking')
     return parser.parse_args()
 
 
 def main():
-    from mlsteam import stparams
-    # Global settings
-    WINDOW = int(stparams.get_value('window', 50))
-    EPOCHS = int(stparams.get_value('epochs', 15))
-    BATCH = int(stparams.get_value('batch', 20))
-    TEST_RATIO = float(stparams.get_value('test_ratio', .2))
-
-    DATA_PATH = stparams.get_value(
-        'data_path', '/mlsteam/data/stock_prices/20220512_tesla.pkl')
-    SCALER_PATH = stparams.get_value('scaler_path', '/working/scaler.pkl')
-    MODEL_PATH = stparams.get_value('model_path', '/working/1')
-    TENSORBOARD_PATH = stparams.get_value('tensorboard_path', '/working/tensorboard')
-
     args = get_args()
+    window = args.window
+    epoch = args.epoch
+    batch = args.batch
+    test_ratio = args.test_ratio
+    data_path = args.data_path
+    scaler_path = args.scaler_path
+    model_path = args.model_path
 
     # Forces to use CPU rather than GPU
     # NVIDIA drivers of higher versions have messy implimentation of LSTM!
     # Ref: https://github.com/mozilla/DeepSpeech/issues/3088#issuecomment-656056969
     # Ref: https://github.com/tensorflow/tensorflow/issues/35950#issuecomment-577427083
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-    stock_dates, stock_prices = load_data(DATA_PATH)
+    stock_dates, stock_prices = load_data(data_path)
     scaler, scaled_data = transform_data(stock_prices)
 
-    train_split = int(len(scaled_data) * (1.0 - TEST_RATIO))
+    train_split = int(len(scaled_data) * (1.0 - test_ratio))
     scaled_data_train = scaled_data[:train_split]
     x_train, y_train = extract_x_y(
-        scaled_data_train, window=WINDOW, offset=WINDOW)
-    model = build_LSTM(x_train, units=WINDOW)
-    train_model(model, x_train, y_train, EPOCHS, BATCH,
-                interactive_progress=True, tensorboard_path=TENSORBOARD_PATH,
+        scaled_data_train, window=window, offset=window)
+    model = build_LSTM(x_train, units=window)
+    train_model(model, x_train, y_train, epoch, batch,
+                interactive_progress=True, tensorboard_path=args.tensorboard_path,
                 mlsteam_track=args.mlsteam_track)
-    save_scaler(scaler, SCALER_PATH)
-    save_model(model, MODEL_PATH)
+    save_scaler(scaler, scaler_path)
+    save_model(model, model_path)
 
 
 if __name__ == '__main__':
