@@ -1,4 +1,4 @@
-command: python3 train.py
+command: python3 train.py --mlsteam_track
 params:
   window: 50
   epochs: 15

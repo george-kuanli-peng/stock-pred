@@ -1,4 +1,6 @@
+import argparse
 import csv
+import json
 import os
 import pickle
 from pathlib import Path
@@ -6,12 +8,19 @@ from pathlib import Path
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras import Input, Model
-from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.callbacks import Callback, TensorBoard
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.models import load_model as tf_load_model
 
 
 _track = None
+
+
+class MLSteamModelTrainingTracker(Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        track = get_mlsteam_track()
+        track['metrics/train'].log(json.dumps({'epoch': epoch, 'loss': logs['loss']}))
+        track['metrics/train.chart'].log(json.dumps({'epoch': epoch, 'loss': logs['loss']}))
 
 
 def get_mlsteam_track():
@@ -82,15 +91,17 @@ def train_model(model, x_train, y_train, epochs, batch,
                 mlsteam_track=False):
     if mlsteam_track:
         track = get_mlsteam_track()
-        track['epochs'] = epochs
-        track['batch'] = batch
-        track['x_train'] = x_train
-        track['y_train'] = y_train
+        track['params/epochs'] = epochs
+        track['params/batch'] = batch
+        track['data/x_train'] = x_train
+        track['data/y_train'] = y_train
 
     callbacks = []
     if tensorboard_path:
         cb = TensorBoard(log_dir=tensorboard_path, histogram_freq=1)
         callbacks.append(cb)
+    if mlsteam_track:
+        callbacks.append(MLSteamModelTrainingTracker())
     history = model.fit(x_train, y_train,
                         epochs=epochs, batch_size=batch,
                         verbose=1 if interactive_progress else 2,
@@ -135,6 +146,12 @@ def get_mape(pred, actual):
     return (np.fabs(actual-pred)/actual)[actual != 0].mean()
 
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mlsteam_track', action='store_true')
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
     from mlsteam import stparams
     # Global settings
@@ -147,7 +164,9 @@ if __name__ == '__main__':
         'data_path', '/mlsteam/data/stock_prices/20220512_tesla.pkl')
     SCALER_PATH = stparams.get_value('scaler_path', '/working/scaler.pkl')
     MODEL_PATH = stparams.get_value('model_path', '/working/1')
-    TENSORBOARD_PATH = stparams.get_value('tensorboard_path', '/tensorboard')
+    TENSORBOARD_PATH = stparams.get_value('tensorboard_path', '/working/tensorboard')
+
+    args = get_args()
 
     # Forces to use CPU rather than GPU
     # NVIDIA drivers of higher versions have messy implimentation of LSTM!
@@ -163,6 +182,7 @@ if __name__ == '__main__':
         scaled_data_train, window=WINDOW, offset=WINDOW)
     model = build_LSTM(x_train, units=WINDOW)
     train_model(model, x_train, y_train, EPOCHS, BATCH,
-                interactive_progress=True, tensorboard_path=TENSORBOARD_PATH)
+                interactive_progress=True, tensorboard_path=TENSORBOARD_PATH,
+                mlsteam_track=args.mlsteam_track)
     save_scaler(scaler, SCALER_PATH)
     save_model(model, MODEL_PATH)
