@@ -276,3 +276,6 @@ tags
 *.amltmp 
 *.amltemp
 
+# ZenML
+.zen
+

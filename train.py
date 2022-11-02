@@ -53,9 +53,7 @@ def load_data_csv(csv_file_path):
             stock_prices.append(float(row['close']))
 
     stock_dates = np.array(stock_dates, dtype='datetime64[s]')
-    stock_dates = np.flipud(stock_dates)
     stock_prices = np.array(stock_prices)
-    stock_prices = np.flipud(stock_prices)
 
     return stock_dates, stock_prices
 

@@ -53,6 +53,10 @@ To send a request to the deployed model:
 
 ## GCP Vertex AI
 
+## ZenML
+
+To experiment on model training, open and run the `zenml/train_lstm_zenml.ipynb` notebook.
+
 Setup:
 
 1. Install Python dependencies
