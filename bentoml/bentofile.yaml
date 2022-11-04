@@ -1,0 +1,11 @@
+service: "service.py:svc"
+labels:
+  owner: mlteam
+  project: stock-pred
+include:
+- "*.py"
+python:
+  packages:
+    - protobuf==3.20.*  # to avoid "Descriptors cannot not be created directly" error
+    - scikit-learn>=1.0.2
+    - tensorflow==2.8.0
