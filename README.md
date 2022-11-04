@@ -53,10 +53,6 @@ To send a request to the deployed model:
 
 ## GCP Vertex AI
 
-## ZenML
-
-To experiment on model training, open and run the `zenml/train_lstm_zenml.ipynb` notebook.
-
 Setup:
 
 1. Install Python dependencies
@@ -84,3 +80,11 @@ cd gcp_vertexai
 PYTHONPATH=.. python train_gcp.py --experiment_name stock-pred-lstm-exp --project_id beautiful-sand-178409 --location asia-southeast1 --train_csv=../data/20220808_tesla.csv
 ```
 
+## ZenML
+
+To experiment on model training, open and run the `zenml/train_lstm_zenml.ipynb` notebook.
+
+
+## BentoML
+
+To experiment on model training and serving, open and run the `bentoml/train_lstm_bentoml.ipynb` notebook.
