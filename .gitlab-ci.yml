@@ -1,0 +1,41 @@
+# For more information, see: https://docs.gitlab.com/ee/ci/yaml/index.html#stages
+variables:
+  GIT_STRATEGY: clone
+  CUDA_VISIBLE_DEVICES: "-1"
+  WINDOW: 50
+  EPOCHS: 15
+  BATCH: 20
+  TEST_RATIO: "0.2"
+  DATA_PATH: 'data/20220808_tesla.csv'
+  SCALER_PATH: 'models/scaler.pkl'
+  MODEL_PATH: 'models/1'
+  TENSORBOARD_PATH: 'tensorboard'
+
+stages:
+  - init
+  - train
+
+init-job:       # This job runs in the build stage, which runs first.
+  stage: init
+  script:
+    # stop failing on pipeline error in the next "yes | xxx" command
+    # Ref: https://forum.gitlab.com/t/job-failed-with-exit-status-1-without-any-error/54564/7
+    # Ref: https://stackoverflow.com/questions/49430554/gitlab-runner-in-docker-yes-true-returns-with-exit-1
+    - set +o pipefail
+    - yes | pip3 install -r requirements.txt
+
+train-job:
+  stage: train
+  script:
+    - >
+      python3 train.py
+      -W $WINDOW -E $EPOCHS -B $BATCH
+      --test_ratio $TEST_RATIO
+      --data_path "$DATA_PATH"
+      --scaler_path "$SCALER_PATH"
+      --model_path "$MODEL_PATH"
+      --tensorboard_path "$TENSORBOARD_PATH"
+  artifacts:
+    paths:
+      - $SCALER_PATH
+      - $MODEL_PATH

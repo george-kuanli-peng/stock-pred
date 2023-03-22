@@ -88,3 +88,8 @@ To experiment on model training, open and run the `zenml/train_lstm_zenml.ipynb`
 ## BentoML
 
 To experiment on model training and serving, open and run the `bentoml/train_lstm_bentoml.ipynb` notebook.
+
+
+## GitLab CI/CD
+
+Push new commit(s) to the GitLab repository and wait for the pipeline to run.
